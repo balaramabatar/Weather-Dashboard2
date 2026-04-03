@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard | Pro Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="searchOverlay" class="search-overlay">
+        <div class="search-modal">
+            <h3>Add New Location</h3>
+            <div class="search-box-wrapper">
+                <input type="text" id="cityInput" placeholder="Enter city name..." autocomplete="off">
+                <button class="btn-gps" onclick="getLocation()" title="Use Current Location">📍</button>
+            </div>
+            <div class="modal-btns">
+                <button onclick="addNewCity()" class="btn-primary">Add City</button>
+                <button onclick="toggleSearch()" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <button class="btn-add" onclick="toggleSearch()">+</button>
+                <div class="pagination-dots">
+                    <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+                <div class="toggle-switch">
+                    <span>°C</span>
+                    <label class="switch">
+                        <input type="checkbox" id="unitSlider" onchange="toggleUnits()">
+                        <span class="slider round"></span>
+                    </label>
+                    <span>°F</span>
+                </div>
+            </div>
+
+            <div class="location-info">
+                <div class="loc-text">
+                    <p class="city"><span class="icon-nav">↗</span> <span id="cityName">Loading...</span></p>
+                    <p class="date" id="currentDate">Today</p>
+                </div>
+                <div class="sun-times">
+                    <p>🌅 <span id="sunrise">00:00</span></p>
+                    <p>🌇 <span id="sunset">00:00</span></p>
+                </div>
+            </div>
+
+            <div class="main-temperature">
+                <button class="nav-arrow" onclick="changeCity(-1)">‹</button>
+                <div class="temp-display">
+                    <h1 id="mainTemp">--°</h1>
+                    <p id="condition">☀️ Loading</p>
+                </div>
+                <button class="nav-arrow" onclick="changeCity(1)">›</button>
+            </div>
+
+            <div class="cityscape">
+                <div class="sun"></div>
+                <div class="building b1"></div>
+                <div class="building b2"></div>
+                <div class="building b3"></div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h2>Welcome back Balaram!</h2>
+                    <p>Check out today's weather information</p>
+                </div>
+                
+                <div class="user-profile">
+                    <div class="dropdown-container">
+                        <span class="more-options" onclick="toggleThemeMenu()">•••</span>
+                        <div class="theme-menu" id="themeMenu">
+                            <button onclick="setTheme('light')">☀️ Light Mode</button>
+                            <button onclick="setTheme('dark')">🌙 Dark Mode</button>
+                        </div>
+                    </div>
+                    <div class="avatar">BA</div>
+                </div>
+            </header>
+
+            <section class="chart-section">
+                <div class="section-header">
+                    <h3 id="chartTitle">Upcoming hours</h3>
+                    <div class="header-controls">
+                        <select class="dropdown-light"><option>Rain precipitation</option></select>
+                        <button class="btn-light" id="btnPrevDay" onclick="updateView('today')" style="display:none;">‹ Today</button>
+                        <button class="btn-light" id="btnNextDay" onclick="updateView('forecast')">Next days ›</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-overlay-labels" id="chartLabels"></div>
+                    <div class="canvas-wrapper"><canvas id="hourlyChart"></canvas></div>
+                    <div class="chart-overlay-bottom" id="chartBottomLabels"></div>
+                </div>
+            </section>
+
+            <section class="details-section">
+                <h3>More details of today's weather</h3>
+                <div class="metrics-grid">
+                    
+                    <div class="card">
+                        <div class="card-head"><span>Humidity</span> <div class="icon-box">💧</div></div>
+                        <div class="card-body">
+                            <h4><span id="humidity">--</span>% <span class="status">normal</span></h4>
+                            <div class="labels"><span>good</span><span>normal</span><span>bad</span></div>
+                            <div class="segmented-bar">
+                                <div class="segment active"></div><div class="segment active"></div><div class="segment active half"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head"><span>Wind</span> <div class="icon-box">💨</div></div>
+                        <div class="card-body gauge-container">
+                            <div class="gauge-bg"></div>
+                            <div class="gauge-needle" id="windNeedle"></div>
+                            <div class="gauge-numbers"><span>0</span><span>10</span><span>20</span><span>30</span><span>40</span></div>
+                            <h4 class="gauge-value" id="windSpeed">-- km/h</h4>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head"><span>Air Quality</span> <div class="icon-box">🍃</div></div>
+                        <div class="card-body">
+                            <h4><span id="aqiValue">--</span> <span class="status" id="aqiStatus">loading</span></h4>
+                            <div class="labels"><span>good</span><span>mod</span><span>poor</span></div>
+                            <div class="segmented-bar" id="aqiBar">
+                                <div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head"><span>Precipitation</span> <div class="icon-box">🌧️</div></div>
+                        <div class="card-body">
+                            <h4 id="precipValue">0 cm</h4>
+                            <div class="labels dots-labels"><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span></div>
+                            <div class="dots-bar">
+                                <div class="dot active"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+                                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head"><span>UV index</span> <div class="icon-box">☀️</div></div>
+                        <div class="card-body">
+                            <h4>4 <span class="status">medium</span></h4>
+                            <div class="labels"><span>0-2</span><span>3-5</span><span>6-7</span><span>8-10</span><span>11+</span></div>
+                            <div class="segmented-bar">
+                                <div class="segment active"></div><div class="segment active"></div><div class="segment"></div><div class="segment"></div><div class="segment"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head"><span>Feels like</span> <div class="icon-box">🌡️</div></div>
+                        <div class="card-body">
+                            <h4 id="feelsLike">--°</h4>
+                            <div class="labels"><span>0°</span><span>25°</span><span>50°</span></div>
+                            <div class="progress-bar"><div class="fill" id="feelsFill" style="width: 0%"></div></div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
