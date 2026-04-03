@@ -27,6 +27,97 @@ body { background-color: var(--bg-page); display: flex; justify-content: center;
 /* SIDEBAR */
 .sidebar { width: 320px; background: var(--blue-sidebar); padding: 40px; color: white; display: flex; flex-direction: column; position: relative; border-radius: 40px 0 0 40px; }
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; }
+/* ==========================================
+   📱 RESPONSIVE DESIGN (MOBILE & TABLET)
+========================================= */
+
+/* Make the main wrapper flexible instead of a fixed 1200px */
+.dashboard-wrapper {
+    max-width: 1200px;
+    width: 100%;
+}
+
+/* 💻 TABLET VIEW (Under 1024px) */
+@media (max-width: 1024px) {
+    .dashboard-wrapper {
+        flex-direction: column; /* Stack sidebar on top of main content */
+        width: 95%;
+    }
+    
+    .sidebar {
+        width: 100%;
+        border-radius: 40px 40px 0 0; /* Adjust rounded corners */
+        padding: 30px;
+    }
+    
+    .main-content {
+        border-radius: 0 0 40px 40px;
+        padding: 30px;
+    }
+    
+    .cityscape {
+        display: none; /* Hide the buildings on smaller screens to save space */
+    }
+}
+
+/* 📱 MOBILE VIEW (Under 768px) */
+@media (max-width: 768px) {
+    body {
+        padding: 20px 10px; /* Reduce outer spacing */
+    }
+    
+    .dashboard-wrapper {
+        border-radius: 25px;
+    }
+    
+    .sidebar {
+        border-radius: 25px 25px 0 0;
+    }
+    
+    .main-content {
+        border-radius: 0 0 25px 25px;
+        padding: 20px;
+    }
+
+    /* Change grid from 3 cards wide to 2 cards wide */
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .top-header {
+        flex-direction: column; /* Stack the welcome text and profile */
+        gap: 15px;
+    }
+    
+    .user-profile {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .temp-display h1 {
+        font-size: 4.5rem; /* Shrink the giant temperature text slightly */
+    }
+
+    /* Allow the chart to scroll horizontally so the hours don't squish together */
+    .chart-section {
+        overflow-x: auto;
+    }
+    .chart-container {
+        min-width: 600px; /* Forces chart to maintain shape and allows side-scrolling */
+    }
+}
+
+/* 📱 SMALL MOBILE VIEW (Under 480px) */
+@media (max-width: 480px) {
+    /* Change grid to 1 single column */
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .search-modal {
+        width: 90%; /* Ensure modal fits on small screens */
+    }
+}
 .btn-add { width: 32px; height: 32px; background: white; border: none; border-radius: 10px; color: var(--blue-sidebar); font-weight: bold; cursor: pointer; }
 .pagination-dots { display: flex; gap: 4px; }
 .pagination-dots .dot { width: 6px; height: 6px; background: rgba(255,255,255,0.4); border-radius: 50%; }
