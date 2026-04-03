@@ -1,5 +1,5 @@
 const apiKey = 'ef75ab0b22d7e108b75fda1dae3f1de4'; // Add your OpenWeather API key
-const apiKey = 'YOUR_API_KEY_HERE'; // Add your OpenWeather API key
+
 
 // 🌟 LOCAL STORAGE ENGINE
 let cityList = JSON.parse(localStorage.getItem('weatherAppCities')) || ['New York', 'London', 'Tokyo'];
@@ -15,8 +15,7 @@ let rawData = { temp: 27, feels: 30, wind: 8, aqi: 1, precip: 0 };
 let forecastList = [];
 let cityTimezoneOffset = 0; 
 
-// 🌟 SIMPLE, FOOLPROOF TIME EXTRACTOR
-// This avoids browser timezone crashes.
+// 🌟 TIME EXTRACTOR
 function getCityTime(unixSeconds, offsetSeconds) {
     const d = new Date((unixSeconds + offsetSeconds) * 1000);
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -96,7 +95,7 @@ function changeCity(direction) {
     fetchWeather(cityList[currentIndex]);
 }
 
-// 🌟 API FETCH (Weather + Forecast + AQI)
+// 🌟 API FETCH
 async function fetchWeather(city) {
     try {
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
@@ -105,7 +104,6 @@ async function fetchWeather(city) {
         const fRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`);
         const fData = await fRes.json();
         
-        // Fetch AQI
         const aqiRes = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${data.coord.lat}&lon=${data.coord.lon}&appid=${apiKey}`);
         const aqiData = await aqiRes.json();
         
@@ -119,7 +117,6 @@ async function fetchWeather(city) {
         
         forecastList = fData.list;
 
-        // UI Text
         document.getElementById('cityName').innerText = `${data.name}, ${data.sys.country}`;
         document.getElementById('condition').innerText = data.weather[0].main.includes("Cloud") ? "☁️ Cloudy" : "☀️ Sunny";
         document.getElementById('humidity').innerText = data.main.humidity;
@@ -155,7 +152,7 @@ function updateView(view) {
             return {
                 time: `${t.h}:00`, 
                 icon: i.weather[0].main.includes("Cloud") ? "☁️" : "☀️",
-                temp: i.main.temp, pop: Math.round((i.pop || 0) * 100) + "%"
+                temp: i.main.temp
             };
         });
     } else {
@@ -165,7 +162,7 @@ function updateView(view) {
             return {
                 time: t.weekday,
                 icon: i.weather[0].main.includes("Cloud") ? "☁️" : "☀️",
-                temp: i.main.temp, pop: Math.round((i.pop || 0) * 100) + "%"
+                temp: i.main.temp
             };
         });
     }
@@ -184,7 +181,6 @@ function updateUI() {
     document.getElementById('windNeedle').style.transform = `rotate(${rotation}deg)`;
     document.getElementById('windSpeed').innerText = `${Math.round(rawData.wind)} km/h`;
     
-    // AQI Logic
     const aqiMap = {1: "Good", 2: "Fair", 3: "Moderate", 4: "Poor", 5: "Hazardous"};
     document.getElementById('aqiValue').innerText = rawData.aqi;
     document.getElementById('aqiStatus').innerText = aqiMap[rawData.aqi] || "Unknown";
@@ -202,11 +198,12 @@ function toggleUnits() {
     updateView(document.getElementById('chartTitle').innerText.includes("Upcoming") ? 'today' : 'forecast');
 }
 
-// 🌟 CHART RENDERING
+// 🌟 CHART RENDERING (Removed Percentage Pop Output)
 function renderChartLabels(points) {
     const topContainer = document.getElementById('chartLabels');
     const bottomContainer = document.getElementById('chartBottomLabels');
-    topContainer.innerHTML = ''; bottomContainer.innerHTML = '';
+    topContainer.innerHTML = ''; 
+    bottomContainer.innerHTML = ''; // This will stay empty now
     
     const convert = (c) => isCelsius ? Math.round(c) : Math.round((c * 9/5) + 32);
 
@@ -216,7 +213,7 @@ function renderChartLabels(points) {
                 <span class="time">${data.time}</span><span class="icon">${data.icon}</span><span class="temp">${convert(data.temp)}°</span>
                 <div style="position: absolute; bottom: -115px; width: 1px; height: 115px; background-color: var(--grid-line); z-index: -1;"></div>
             </div>`;
-        bottomContainer.innerHTML += `<div class="col-bottom">${data.pop}</div>`;
+        // Removed the line that adds data.pop to the bottom container
     });
 
     initAreaChart(points.map(p => convert(p.temp)));
@@ -241,42 +238,30 @@ function initAreaChart(temps) {
     });
 }
 
-
-
 // 🌟 AUTO-LOAD ON STARTUP
-// ==========================================
-// AUTO-LOAD CURRENT LOCATION ON STARTUP
-// ==========================================
 window.onload = () => {
-    // Check if the browser supports GPS
-    if (navigator.geolocation) {
+    if (navigator.geolocation && !localStorage.getItem('weatherAppIndex')) {
         navigator.geolocation.getCurrentPosition(async (position) => {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             try {
-                // Fetch the city name based on the user's coordinates
                 const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
                 const data = await res.json();
                 
-                // Add this city to the carousel if it's not there
                 if (!cityList.includes(data.name)) {
                     cityList.push(data.name);
                 }
                 currentIndex = cityList.indexOf(data.name);
-                
-                // Load the dashboard with the exact GPS location
+                saveLocalData();
                 fetchWeather(data.name);
                 
             } catch(e) {
-                // If the API fails, safely load the default city
-                fetchWeather(cityList[0]); 
+                fetchWeather(cityList[currentIndex]); 
             }
         }, () => {
-            // If the user clicks "Block" for location access, safely load the default city
-            fetchWeather(cityList[0]); 
+            fetchWeather(cityList[currentIndex]); 
         });
     } else {
-        // If the browser doesn't have GPS, load the default city
-        fetchWeather(cityList[0]);
+        fetchWeather(cityList[currentIndex]);
     }
 };
