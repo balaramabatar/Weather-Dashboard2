@@ -239,29 +239,39 @@ function initAreaChart(temps) {
 }
 
 // 🌟 AUTO-LOAD ON STARTUP
+// ==========================================
+// AUTO-LOAD CURRENT LOCATION ON STARTUP
+// ==========================================
 window.onload = () => {
-    if (navigator.geolocation && !localStorage.getItem('weatherAppIndex')) {
+    // Check if the browser supports GPS
+    if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async (position) => {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             try {
+                // Fetch the city name based on the user's coordinates
                 const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
                 const data = await res.json();
                 
+                // Add this city to the carousel if it's not there
                 if (!cityList.includes(data.name)) {
                     cityList.push(data.name);
                 }
                 currentIndex = cityList.indexOf(data.name);
-                saveLocalData();
+                
+                // Load the dashboard with the exact GPS location
                 fetchWeather(data.name);
                 
             } catch(e) {
-                fetchWeather(cityList[currentIndex]); 
+                // If the API fails, safely load the default city
+                fetchWeather(cityList[0]); 
             }
         }, () => {
-            fetchWeather(cityList[currentIndex]); 
+            // If the user clicks "Block" for location access, safely load the default city
+            fetchWeather(cityList[0]); 
         });
     } else {
-        fetchWeather(cityList[currentIndex]);
+        // If the browser doesn't have GPS, load the default city
+        fetchWeather(cityList[0]);
     }
 };
